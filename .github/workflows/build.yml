@@ -1,0 +1,50 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  build-android:
+    runs-on:  ubuntu-18.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [ 14.2.0, 14.6.0, 14.7.0 ]
+        abi: [ arm64, x86_64 ]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup 32-bit dependencies
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update -y -qq
+        sudo apt-get install -y -qq build-essential gcc-multilib g++-multilib
+    - name: Set Android NDK
+      run: echo "::set-env name=ANDROID_NDK_HOME::$ANDROID_SDK_ROOT/ndk-bundle"
+
+    - name: Build
+      run: ANDROID_ABI=${{matrix.abi}} ./build.sh build-android ${{matrix.node}}
+    
+    - uses: actions/upload-artifact@v2
+      with:
+        name: lib-android-${{matrix.node}}-${{matrix.abi}}
+        path: node-${{matrix.node}}/out/Release/lib.target
+
+  build-linux:
+    runs-on:  ubuntu-18.04
+
+    strategy:
+      matrix:
+        node: [ 14.2.0, 14.6.0, 14.7.0 ]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build
+      run: ./build.sh build-linux-x86-64 ${{matrix.node}}
+ 
+    - uses: actions/upload-artifact@v2
+      with:
+        name: lib-linux-${{matrix.node}}-x86_64
+        path: node-${{matrix.node}}/out/Release/lib.target
