@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [ 14.2.0, 14.6.0, 14.7.0 ]
+        node: [ 14.16.0 ]
         abi: [ arm64, x86_64 ]
 
     steps:
@@ -36,15 +36,22 @@ jobs:
 
     strategy:
       matrix:
-        node: [ 14.2.0, 14.6.0, 14.7.0 ]
+        node: [ 14.16.0 ]
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Build
-      run: ./build.sh build-linux-x86-64 ${{matrix.node}}
- 
-    - uses: actions/upload-artifact@v2
+    - uses: nttld/setup-ndk@v1
+      id: setup-ndk
       with:
-        name: lib-linux-${{matrix.node}}-x86_64
-        path: node-${{matrix.node}}/out/Release/lib.target
+        ndk-version: r21d
+    - run: 
+      echo ${{ steps.setup-ndk.outputs.ndk-path }} > ./ndkpath.txt
+
+    # - name: Build
+    #   run: ./build.sh build-linux-x86-64 ${{matrix.node}}
+ 
+    # - uses: actions/upload-artifact@v2
+    #   with:
+    #     name: lib-linux-${{matrix.node}}-x86_64
+    #     path: node-${{matrix.node}}/out/Release/lib.target
