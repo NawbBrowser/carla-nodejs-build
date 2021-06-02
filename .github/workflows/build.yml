@@ -1,16 +1,16 @@
 name: build
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
-  build-nodejs-android-x64:
-    runs-on: ubuntu-18.04
+  build-nodejs-shared-library-for-android:
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
       matrix:
         node: [14.16.1]
-        abi: [arm64, x86_64]
+        abi: [arm64, arm, x86_64, x86]
 
     steps:
       - uses: actions/checkout@v2
@@ -18,59 +18,20 @@ jobs:
       - uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
-          ndk-version: r21d
+          ndk-version: r22b
       - run: |
           echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
 
-      - name: Setup 32-bit dependencies
+      - name: Setup dependencies
         run: |
           sudo dpkg --add-architecture i386
-          sudo apt-get update -y -qq
-          sudo apt-get install -y -qq build-essential gcc-multilib g++-multilib
+          sudo apt update -y
+          sudo apt install -y build-essential gcc-multilib g++-multilib
 
       - name: Build
-        run: ANDROID_ABI=${{matrix.abi}} NODE_VERSION=${{matrix.node}} ./build.sh
+        run: ANDROID_ABI=${{matrix.abi}} NODE_VERSION=${{matrix.node}} ./build-ci.sh
 
       - uses: actions/upload-artifact@v2
         with:
-          name: lib-android-${{matrix.node}}-${{matrix.abi}}
-          path: node-${{matrix.node}}/out/Release/lib.target
-
-  # build-nodejs-android-x86:
-  #   runs-on: ubuntu-18.04
-
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       node: [14.16.1]
-  #       abi: [arm]
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-
-  #     - name: Set up GCC
-  #       uses: egor-tensin/setup-gcc@v1
-  #       with:
-  #         platform: x86
-
-  #     - uses: nttld/setup-ndk@v1
-  #       id: setup-ndk
-  #       with:
-  #         ndk-version: r21d
-  #     - run: |
-  #         echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-
-  #     - name: Setup build env
-  #       run: |
-  #         sudo dpkg --add-architecture i386
-  #         sudo apt update -y
-  #         sudo apt install -y  build-essential gcc-multilib g++-multilib
-  #         sudo apt install tree
-
-  #     - name: Build
-  #       run: ANDROID_ABI=${{matrix.abi}} NODE_VERSION=${{matrix.node}} ./build.sh
-
-  #     - uses: actions/upload-artifact@v2
-  #       with:
-  #         name: lib-android-${{matrix.node}}-${{matrix.abi}}
-  #         path: node-${{matrix.node}}/out/Release/lib.target
+          name: libnode-android-v${{matrix.node}}-${{matrix.abi}}
+          path: node-${{matrix.node}}/out/Release/share_library/*
