@@ -1,4 +1,4 @@
-## 用于编译ios和android版本的nodejs
+## Build nodejs for android
 
 ## 使用
 
